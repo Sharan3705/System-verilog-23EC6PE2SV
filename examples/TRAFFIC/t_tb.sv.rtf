@@ -1,0 +1,61 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 `timescale 1ns/1ps\
+\
+module traffic_tb;\
+\
+    logic   clk = 0;\
+    logic   rst;\
+    light_t color;\
+\
+    // Clock generation\
+    always #5 clk = ~clk;\
+\
+    // DUT\
+    traffic dut (\
+        .clk   (clk),\
+        .rst   (rst),\
+        .color (color)\
+    );\
+\
+    // ---------------- COVERAGE ----------------\
+    covergroup cg_light @(posedge clk);\
+        cp_color : coverpoint color \{\
+            bins red    = \{RED\};\
+            bins green  = \{GREEN\};\
+            bins yellow = \{YELLOW\};\
+\
+            // Full cycle coverage\
+            bins cycle = (RED => GREEN => YELLOW => RED);\
+        \}\
+    endgroup\
+\
+    cg_light cg = new();\
+\
+    // ---------------- TEST SEQUENCE ----------------\
+    initial begin\
+        // VCD dump\
+        $dumpfile("traffic.vcd");\
+        $dumpvars(0, traffic_tb);\
+\
+        // Reset\
+        rst = 1;\
+        @(posedge clk);\
+        rst = 0;\
+\
+        // Run enough cycles to complete multiple loops\
+        repeat (10) @(posedge clk);\
+\
+        // Coverage report\
+        $display("Traffic Light Coverage = %0.2f %%", cg.get_inst_coverage());\
+\
+        #10;\
+        $finish;\
+    end\
+\
+endmodule}

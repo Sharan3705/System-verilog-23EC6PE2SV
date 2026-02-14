@@ -1,0 +1,58 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2865
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 package atm_pkg;\
+  typedef enum logic [1:0] \{\
+    IDLE, \
+    CHECK_PIN, \
+    CHECK_BAL, \
+    DISPENSE\
+  \} state_t;\
+endpackage\
+\
+import atm_pkg::*;\
+\
+module atm_controller(\
+  input logic clk, rst,\
+  input logic card_inserted,\
+  input logic pin_correct,\
+  input logic balance_ok,\
+  output logic dispense_cash,\
+  output state_t state\
+);\
+  \
+  state_t next_state;\
+\
+  always_ff @(posedge clk) begin\
+    if (rst) state <= IDLE;\
+    else     state <= next_state;\
+  end\
+\
+  always_comb begin\
+    next_state = state;\
+    dispense_cash = 0;\
+\
+    case (state)\
+      IDLE: begin\
+        if (card_inserted) next_state = CHECK_PIN;\
+      end\
+      CHECK_PIN: begin\
+        if (pin_correct) next_state = CHECK_BAL;\
+        else             next_state = IDLE; // Eject\
+      end\
+      CHECK_BAL: begin\
+        if (balance_ok)  next_state = DISPENSE;\
+        else             next_state = IDLE; // Decline\
+      end\
+      DISPENSE: begin\
+        dispense_cash = 1;\
+        next_state = IDLE;\
+      end\
+      default: next_state = IDLE;\
+    endcase\
+  end\
+endmodule}
